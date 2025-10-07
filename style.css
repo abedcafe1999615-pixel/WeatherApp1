@@ -1,0 +1,50 @@
+* {
+  box-sizing: border-box;
+  font-family: "Tajawal", sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  color: #fff;
+  text-align: center;
+  padding: 30px;
+}
+
+.container {
+  max-width: 400px;
+  margin: auto;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+input {
+  width: 80%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  outline: none;
+  margin-bottom: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  background: #0066ff;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #004ecc;
+}
+
+.weather-box {
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  padding: 15px;
+}
