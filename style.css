@@ -4,69 +4,92 @@
 }
 
 body {
+  margin: 0;
+  padding: 0;
   background: linear-gradient(135deg, #4facfe, #00f2fe);
   color: #fff;
   text-align: center;
-  padding: 30px;
 }
 
 .container {
   max-width: 450px;
   margin: auto;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
-input {
-  width: 80%;
+header h1 {
+  margin-bottom: 20px;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.search-box input {
   padding: 10px;
-  border: none;
   border-radius: 10px;
-  outline: none;
-  margin-bottom: 10px;
+  border: none;
+  width: 70%;
 }
 
-button {
+.search-box button {
   padding: 10px 20px;
-  background: #0066ff;
-  border: none;
   border-radius: 10px;
+  border: none;
+  background-color: #0066ff;
   color: white;
-  font-weight: bold;
   cursor: pointer;
 }
 
-button:hover {
-  background: #004ecc;
-}
-
-.weather-box {
-  margin-top: 20px;
+.weather-card {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 15px;
   padding: 15px;
+  margin-bottom: 20px;
 }
 
-.weather-box img {
-  width: 60px;
-  height: 60px;
-  margin-top: 10px;
+.weather-card .temp {
+  font-size: 2.5rem;
+  font-weight: bold;
 }
 
-.weekly-box {
+.weather-card i.fa {
+  font-size: 50px;
+  margin: 10px 0;
+  animation: float 2s infinite ease-in-out;
+}
+
+.details p {
+  margin: 5px 0;
+}
+
+.weekly {
   display: flex;
   overflow-x: auto;
   gap: 10px;
-  margin-top: 10px;
-  padding-bottom: 10px;
+  padding: 10px 0;
 }
 
 .daily-card {
   background: rgba(255,255,255,0.2);
   border-radius: 15px;
   padding: 10px;
-  min-width: 90px;
+  min-width: 80px;
   flex-shrink: 0;
 }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* تغيير الخلفية حسب الطقس */
+.sunny { background: linear-gradient(135deg, #fceabb, #f8b500); }
+.cloudy { background: linear-gradient(135deg, #bdc3c7, #2c3e50); }
+.rain { background: linear-gradient(135deg, #00c6fb, #005bea); }
+.snow { background: linear-gradient(135deg, #e6e9f0, #eef1f5); }
+.thunder { background: linear-gradient(135deg, #616161, #9bc5c3); }
+.mist { background: linear-gradient(135deg, #3e5151, #decba4); }
