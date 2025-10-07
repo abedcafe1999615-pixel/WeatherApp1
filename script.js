@@ -1,57 +1,85 @@
-
 const apiKey = "a21aa4590ddae363b4ff24483dfa6a2a";
 
 window.onload = function() {
-  getWeather("الرياض"); // مدينتك تظهر تلقائيًا عند فتح الموقع
-  setInterval(() => getWeather("الرياض"), 600000); // تحديث كل 10 دقائق
+  getLocationWeather(); 
+  setInterval(getLocationWeather, 600000); // تحديث كل 10 دقائق
 };
 
-async function getWeather(city) {
-  const input = document.getElementById("cityInput");
-  if (city === undefined) city = input.value || "الرياض";
+document.getElementById("searchBtn").addEventListener("click", () => {
+  const city = document.getElementById("cityInput").value;
+  if(city) getWeather(city);
+});
 
-  try {
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=ar`);
-    const data = await response.json();
+// أيقونات Font Awesome حسب الطقس
+const weatherIcons = {
+  "Clear": "fa-sun sunny",
+  "Clouds": "fa-cloud cloudy",
+  "Rain": "fa-tint rain",
+  "Snow": "fa-snowflake-o snow",
+  "Thunderstorm": "fa-bolt thunder",
+  "Drizzle": "fa-tint rain",
+  "Mist": "fa-smog mist",
+  "Fog": "fa-smog mist"
+};
 
-    if (data.cod === "404") {
-      alert("❌ لم يتم العثور على المدينة");
-      return;
-    }
-
-    document.getElementById("cityName").innerText = `📍 ${data.name}`;
-    document.getElementById("temperature").innerText = `🌡️ ${Math.round(data.main.temp)}°C`;
-    document.getElementById("description").innerText = `☁️ ${data.weather[0].description}`;
-
-    // أيقونات جديدة
-    const weatherIcon = document.getElementById("weatherIcon");
-    const icons = {
-      "Clear": "icons/sunny.png",
-      "Clouds": "icons/cloudy.png",
-      "Rain": "icons/rain.png",
-      "Snow": "icons/snow.png",
-      "Thunderstorm": "icons/thunder.png",
-      "Drizzle": "icons/drizzle.png",
-      "Mist": "icons/mist.png"
-    };
-    weatherIcon.src = icons[data.weather[0].main] || "icons/sunny.png";
-    weatherIcon.alt = data.weather[0].description;
-
-    // الطقس الأسبوعي
-    const lat = data.coord.lat;
-    const lon = data.coord.lon;
-    getWeeklyWeather(lat, lon);
-
-  } catch (error) {
-    alert("حدث خطأ أثناء جلب البيانات ⚠️");
+async function getLocationWeather() {
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        getWeatherByCoords(lat, lon);
+      },
+      () => { getWeather("حلب"); } // مدينتك الافتراضية
+    );
+  } else {
+    getWeather("حلب");
   }
 }
 
-async function getWeeklyWeather(lat, lon) {
-  try {
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly&appid=${apiKey}&units=metric&lang=ar`);
-    const data = await response.json();
+async function getWeather(city){
+  try{
+    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=ar`);
+    const data = await res.json();
+    displayCurrentWeather(data);
+    getWeeklyWeather(data.coord.lat, data.coord.lon);
+  } catch(e){
+    alert("حدث خطأ في جلب البيانات ⚠️");
+  }
+}
 
+async function getWeatherByCoords(lat, lon){
+  try{
+    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ar`);
+    const data = await res.json();
+    displayCurrentWeather(data);
+    getWeeklyWeather(lat, lon);
+  } catch(e){
+    alert("حدث خطأ في جلب البيانات ⚠️");
+  }
+}
+
+function displayCurrentWeather(data){
+  document.getElementById("cityName").innerText = data.name;
+  document.getElementById("temperature").innerText = `${Math.round(data.main.temp)}°C`;
+  document.getElementById("description").innerText = data.weather[0].description;
+  document.getElementById("humidity").innerText = data.main.humidity + "%";
+  document.getElementById("wind").innerText = data.wind.speed + " م/ث";
+  document.getElementById("pressure").innerText = data.main.pressure + " hPa";
+
+  const iconEl = document.getElementById("weatherIcon");
+  const main = data.weather[0].main;
+  iconEl.className = "fa " + (weatherIcons[main] || "fa-sun sunny");
+
+  // تغيير لون الخلفية حسب الطقس
+  const card = document.getElementById("currentWeather");
+  card.className = "weather-card " + (main.toLowerCase() || "sunny");
+}
+
+async function getWeeklyWeather(lat, lon){
+  try{
+    const res = await fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly&appid=${apiKey}&units=metric&lang=ar`);
+    const data = await res.json();
     const weeklyDiv = document.getElementById("weeklyForecast");
     weeklyDiv.innerHTML = "";
 
@@ -65,13 +93,13 @@ async function getWeeklyWeather(lat, lon) {
       card.className = "daily-card";
       card.innerHTML = `
         <p>${dayName}</p>
-        <img src="${iconUrl}" alt="${day.weather[0].description}" width="40" />
+        <img src="${iconUrl}" alt="${day.weather[0].description}" width="40">
         <p>${temp}°C</p>
       `;
       weeklyDiv.appendChild(card);
     });
 
-  } catch (error) {
-    console.log("خطأ في جلب الطقس الأسبوعي", error);
+  } catch(e){
+    console.log("خطأ في جلب الطقس الأسبوعي", e);
   }
 }
