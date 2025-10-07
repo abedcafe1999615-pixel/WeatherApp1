@@ -1,26 +1,43 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>تطبيق الطقس - عبودي</title>
+  
+  <!-- Font Awesome v4 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <h2>🌤️ تطبيق الطقس</h2>
-    <input type="text" id="cityInput" placeholder="أدخل اسم المدينة..." />
-    <button onclick="getWeather()">عرض الطقس</button>
+    <header>
+      <h1>🌤️ تطبيق الطقس</h1>
+      <div class="search-box">
+        <input type="text" id="cityInput" placeholder="أدخل اسم المدينة..." />
+        <button id="searchBtn">بحث</button>
+      </div>
+    </header>
 
-    <div id="weatherInfo" class="weather-box">
-      <h3 id="cityName"></h3>
-      <p id="temperature"></p>
-      <p id="description"></p>
-      <img id="weatherIcon" src="" alt="" />
-    </div>
+    <main>
+      <!-- الطقس الحالي -->
+      <div class="weather-card" id="currentWeather">
+        <h2 id="cityName">--</h2>
+        <p class="temp" id="temperature">--°C</p>
+        <i class="fa" id="weatherIcon"></i>
+        <p id="description">--</p>
+        <div class="details">
+          <p>💧 الرطوبة: <span id="humidity">--%</span></p>
+          <p>💨 سرعة الرياح: <span id="wind">-- م/ث</span></p>
+          <p>☁️ الضغط: <span id="pressure">-- hPa</span></p>
+        </div>
+      </div>
 
-    <h3>الطقس الأسبوعي</h3>
-    <div id="weeklyForecast" class="weekly-box"></div>
+      <!-- الطقس الأسبوعي -->
+      <h3>الطقس الأسبوعي</h3>
+      <div class="weekly" id="weeklyForecast"></div>
+    </main>
   </div>
 
   <script src="script.js"></script>
