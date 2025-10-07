@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تطبيق الطقس - عبودي</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>🌤️ تطبيق الطقس</h2>
+    <input type="text" id="cityInput" placeholder="أدخل اسم المدينة..." />
+    <button onclick="getWeather()">عرض الطقس</button>
+
+    <div id="weatherInfo" class="weather-box">
+      <h3 id="cityName"></h3>
+      <p id="temperature"></p>
+      <p id="description"></p>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
