@@ -1,43 +1,76 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>تطبيق الطقس - عبودي</title>
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>طقس عبودي — Weather</title>
+
   <!-- Font Awesome v4 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
 
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>🌤️ تطبيق الطقس</h1>
-      <div class="search-box">
-        <input type="text" id="cityInput" placeholder="أدخل اسم المدينة..." />
+  <div id="app" class="app sunny"> <!-- class يغير الخلفية حسب الطقس -->
+    <div class="top">
+      <div class="title">
+        <h1>طقس عبودي</h1>
+        <p id="subCity">—</p>
+      </div>
+
+      <div class="controls">
+        <input id="cityInput" type="text" placeholder="ابحث عن مدينة..." />
         <button id="searchBtn">بحث</button>
+        <button id="locBtn" title="استخدم موقعي"><i class="fa fa-map-marker"></i></button>
       </div>
-    </header>
+    </div>
 
-    <main>
-      <!-- الطقس الحالي -->
-      <div class="weather-card" id="currentWeather">
-        <h2 id="cityName">--</h2>
-        <p class="temp" id="temperature">--°C</p>
-        <i class="fa" id="weatherIcon"></i>
-        <p id="description">--</p>
-        <div class="details">
-          <p>💧 الرطوبة: <span id="humidity">--%</span></p>
-          <p>💨 سرعة الرياح: <span id="wind">-- م/ث</span></p>
-          <p>☁️ الضغط: <span id="pressure">-- hPa</span></p>
+    <main class="main-content">
+      <!-- current -->
+      <section class="current-card">
+        <div class="left">
+          <div id="mainIcon" class="icon fa fa-sun"></div>
+          <div class="temp-block">
+            <div id="temp" class="temp">--°C</div>
+            <div id="desc" class="desc">--</div>
+          </div>
         </div>
-      </div>
 
-      <!-- الطقس الأسبوعي -->
-      <h3>الطقس الأسبوعي</h3>
-      <div class="weekly" id="weeklyForecast"></div>
+        <div class="right">
+          <div class="detail">
+            <div>💧 الرطوبة</div>
+            <div id="humidity">--%</div>
+          </div>
+          <div class="detail">
+            <div>💨 الرياح</div>
+            <div id="wind">-- م/ث</div>
+          </div>
+          <div class="detail">
+            <div>☁️ الضغط</div>
+            <div id="pressure">-- hPa</div>
+          </div>
+          <div class="detail">
+            <div>🕘 آخر تحديث</div>
+            <div id="updatedAt">--</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- hourly / weekly strip -->
+      <section class="weekly-section">
+        <h3>الطقس الأسبوعي</h3>
+        <div id="weekly" class="weekly-strip"></div>
+      </section>
     </main>
+
+    <!-- animated layers (clouds / rain) -->
+    <div class="layer clouds" id="clouds"></div>
+    <div class="layer rain" id="rain"></div>
+
+    <footer class="footer">
+      <small>مصدر البيانات: OpenWeather • مصمم لـ: عبودي</small>
+    </footer>
   </div>
 
   <script src="script.js"></script>
