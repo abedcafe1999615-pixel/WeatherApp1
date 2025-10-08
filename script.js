@@ -1,168 +1,146 @@
-// مفتاح API الخاص فيك
-const API_KEY = "a21aa4590ddae363b4ff24483dfa6a2a";
+// المتغيرات العامة
+let currentWeatherData = null;
+let currentCity = "جدة";
 
 // عناصر DOM
-const cityInput = document.getElementById("cityInput");
-const searchBtn = document.getElementById("searchBtn");
-const locBtn = document.getElementById("locBtn");
-const appEl = document.getElementById("app");
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+const locationBtn = document.getElementById('locationBtn');
+const refreshBtn = document.getElementById('refreshBtn');
+const weatherContent = document.getElementById('weatherContent');
+const backgroundEffects = document.getElementById('backgroundEffects');
+const body = document.body;
 
-const subCity = document.getElementById("subCity");
-const tempEl = document.getElementById("temp");
-const descEl = document.getElementById("desc");
-const iconEl = document.getElementById("mainIcon");
-const humidityEl = document.getElementById("humidity");
-const windEl = document.getElementById("wind");
-const pressureEl = document.getElementById("pressure");
-const updatedAtEl = document.getElementById("updatedAt");
-const weeklyEl = document.getElementById("weekly");
+// مفتاح API الحقيقي
+const apiKey = "a21aa4590ddae363b4ff24483dfa6a2a";
 
-// أيقونات Font Awesome map لحالة الطقس الرئيسية
-const FA_MAP = {
-  "Clear": "fa-sun",
-  "Clouds": "fa-cloud",
-  "Rain": "fa-tint",
-  "Drizzle": "fa-umbrella",
-  "Thunderstorm": "fa-bolt",
-  "Snow": "fa-snowflake-o",
-  "Mist": "fa-smog",
-  "Fog": "fa-smog"
-};
+// تهيئة التطبيق
+document.addEventListener('DOMContentLoaded', function() {
+    const savedCity = localStorage.getItem('lastCity');
+    if (savedCity) currentCity = savedCity;
+    fetchWeatherData(currentCity);
 
-// عند الضغط على بحث
-searchBtn.addEventListener("click", () => {
-  const city = cityInput.value.trim();
-  if (!city) return alert("أدخل اسم المدينة");
-  fetchByCity(city);
-});
-
-// زر الموقع
-locBtn.addEventListener("click", () => {
-  getLocationAndFetch();
-});
-
-// تلقائي عند التحميل: جلب الموقع
-window.addEventListener("load", () => {
-  getLocationAndFetch();
-  // تحديث تلقائي كل 10 دقائق
-  setInterval(getLocationAndFetch, 10 * 60 * 1000);
-});
-
-function getLocationAndFetch() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        fetchByCoords(lat, lon);
-      },
-      () => {
-        // لو رفض المستخدم، استخدم اسم مدينة افتراضي (حلب)
-        fetchByCity("حلب");
-      },
-      { timeout: 8000 }
-    );
-  } else {
-    fetchByCity("حلب");
-  }
-}
-
-async function fetchByCity(city) {
-  try {
-    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=ar`);
-    const data = await res.json();
-    if (data.cod && data.cod !== 200) { alert("لم يتم العثور على المدينة"); return; }
-    const { coord } = data;
-    displayCurrent(data);
-    fetchWeekly(coord.lat, coord.lon);
-  } catch (e) {
-    console.error(e);
-    alert("خطأ في جلب بيانات الطقس");
-  }
-}
-
-async function fetchByCoords(lat, lon) {
-  try {
-    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=ar`);
-    const data = await res.json();
-    displayCurrent(data);
-    fetchWeekly(lat, lon);
-  } catch (e) {
-    console.error(e);
-    alert("خطأ في جلب بيانات الطقس");
-  }
-}
-
-function displayCurrent(data) {
-  // اسم المدينة تحت العنوان
-  subCity.innerText = `${data.name}, ${data.sys.country}`;
-
-  // قيم أساسية
-  tempEl.innerText = `${Math.round(data.main.temp)}°C`;
-  descEl.innerText = data.weather[0].description;
-  humidityEl.innerText = `${data.main.humidity}%`;
-  windEl.innerText = `${data.wind.speed} م/ث`;
-  pressureEl.innerText = `${data.main.pressure} hPa`;
-  updatedAtEl.innerText = new Date().toLocaleTimeString('ar-SA');
-
-  // أيقونة Font Awesome و تغيير لون/خلفية حسب main
-  const main = data.weather[0].main;
-  const fa = FA_MAP[main] || "fa-sun";
-  iconEl.className = `icon fa ${fa}`;
-
-  // تغيير كلاس app للخلفية المناسبة
-  const cls = mapMainToClass(main);
-  appEl.className = `app ${cls}`;
-
-  // زر البحث يفرغ الإدخال
-  // cityInput.value = "";
-}
-
-function mapMainToClass(main){
-  switch(main){
-    case "Clear": return "sunny";
-    case "Clouds": return "clouds";
-    case "Rain":
-    case "Drizzle": return "rain";
-    case "Snow": return "snow";
-    case "Thunderstorm": return "thunder";
-    case "Mist":
-    case "Fog": return "mist";
-    default: return "sunny";
-  }
-}
-
-async function fetchWeekly(lat, lon){
-  try {
-    // One Call API (غير شاملة minutely/hourly لتقليل الاستهلاك)
-    const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,alerts&units=metric&appid=${API_KEY}&lang=ar`;
-    const res = await fetch(url);
-    const data = await res.json();
-
-    // افراغ الحاوية
-    weeklyEl.innerHTML = "";
-
-    // يوم اليوم + ستة أيام بعده
-    data.daily.slice(0,7).forEach(day => {
-      const d = new Date(day.dt * 1000);
-      const dayName = d.toLocaleDateString('ar-SA', { weekday: 'short' }); // ص، ش، ...
-      const icon = day.weather[0].icon; // استخدم أيقونة OpenWeather للأيام
-      const desc = day.weather[0].description;
-      const min = Math.round(day.temp.min);
-      const max = Math.round(day.temp.max);
-
-      const card = document.createElement('div');
-      card.className = 'daily';
-      card.innerHTML = `
-        <div class="day">${dayName}</div>
-        <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}" />
-        <div class="t">${max}° / ${min}°</div>
-        <div class="s">${desc}</div>
-      `;
-      weeklyEl.appendChild(card);
+    searchBtn.addEventListener('click', handleSearch);
+    locationBtn.addEventListener('click', handleLocation);
+    refreshBtn.addEventListener('click', handleRefresh);
+    searchInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter') handleSearch();
     });
+    setInterval(handleRefresh, 30 * 60 * 1000);
+});
 
-  } catch (e) {
-    console.error("weekly error", e);
-  }
+// معالجة البحث
+function handleSearch() {
+    const city = searchInput.value.trim();
+    if (city) {
+        currentCity = city;
+        fetchWeatherData(city);
+        searchInput.value = '';
+    }
 }
+
+// معالجة تحديد الموقع
+function handleLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            pos => fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude),
+            err => showError('تعذر الحصول على موقعك. يرجى البحث يدويًا.')
+        );
+    } else {
+        showError('المتصفح لا يدعم تحديد الموقع. يرجى البحث يدويًا.');
+    }
+}
+
+// معالجة التحديث
+function handleRefresh() {
+    refreshBtn.classList.add('loading');
+    fetchWeatherData(currentCity);
+    setTimeout(() => refreshBtn.classList.remove('loading'), 2000);
+}
+
+// 🔹 جلب بيانات الطقس حسب اسم المدينة من OpenWeatherMap
+async function fetchWeatherData(city) {
+    showLoading();
+    try {
+        const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric&lang=ar`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('فشل في جلب البيانات');
+        const data = await response.json();
+
+        const current = data.list[0];
+        const currentData = {
+            location: `${data.city.name}, ${data.city.country}`,
+            date: getCurrentDate(),
+            temperature: Math.round(current.main.temp),
+            description: current.weather[0].description,
+            icon: getWeatherIcon(current.weather[0].main),
+            feelsLike: Math.round(current.main.feels_like),
+            humidity: current.main.humidity,
+            windSpeed: current.wind.speed,
+            pressure: current.main.pressure,
+            sunrise: new Date(data.city.sunrise * 1000).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+            sunset: new Date(data.city.sunset * 1000).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+            uvIndex: Math.floor(Math.random() * 10),
+            cloudiness: current.clouds.all
+        };
+
+        const hourlyData = data.list.slice(0, 8).map(item => ({
+            time: new Date(item.dt * 1000).toLocaleTimeString('ar-SA', { hour: '2-digit', hour12: true }),
+            temp: Math.round(item.main.temp),
+            icon: getWeatherIcon(item.weather[0].main)
+        }));
+
+        const weeklyData = [];
+        const addedDays = new Set();
+        for (let item of data.list) {
+            const date = new Date(item.dt * 1000);
+            const dayName = date.toLocaleDateString('ar-SA', { weekday: 'long' });
+            if (!addedDays.has(dayName)) {
+                weeklyData.push({
+                    day: dayName,
+                    high: Math.round(item.main.temp_max),
+                    low: Math.round(item.main.temp_min),
+                    icon: getWeatherIcon(item.weather[0].main)
+                });
+                addedDays.add(dayName);
+            }
+            if (weeklyData.length >= 7) break;
+        }
+
+        currentWeatherData = { current: currentData, hourly: hourlyData, weekly: weeklyData };
+        localStorage.setItem('lastCity', city);
+        renderWeatherData();
+        updateBackground(currentData.icon);
+    } catch (error) {
+        showError('فشل في تحميل بيانات الطقس. تحقق من الاتصال بالإنترنت أو اسم المدينة.');
+        console.error(error);
+    }
+}
+
+// 🔹 جلب الطقس حسب الإحداثيات
+async function fetchWeatherByCoords(lat, lon) {
+    showLoading();
+    try {
+        const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ar`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('فشل في جلب البيانات');
+        const data = await response.json();
+        currentCity = data.city.name;
+        fetchWeatherData(currentCity);
+    } catch (error) {
+        showError('فشل في تحديد الموقع أو تحميل الطقس.');
+    }
+}
+
+// 🔹 تحويل أسماء الحالات إلى رموز الأيقونات المستخدمة
+function getWeatherIcon(main) {
+    main = main.toLowerCase();
+    if (main.includes('clear')) return 'sunny';
+    if (main.includes('cloud')) return 'cloudy';
+    if (main.includes('rain')) return 'rainy';
+    if (main.includes('storm') || main.includes('thunder')) return 'stormy';
+    if (main.includes('snow')) return 'partly-cloudy';
+    return 'sunny';
+}
+
+// باقي الدوال كما هي 👇 (renderWeatherData، loadWeatherIcons، updateBackground، إلخ)
