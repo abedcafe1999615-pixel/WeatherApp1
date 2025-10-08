@@ -1,78 +1,43 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>طقس عبودي — Weather</title>
-
-  <!-- Font Awesome v4 -->
-  <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طقس - تطبيق الطقس التفاعلي</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="app" class="app sunny"> <!-- class يغير الخلفية حسب الطقس -->
-    <div class="top">
-      <div class="title">
-        <h1>طقس عبودي</h1>
-        <p id="subCity">—</p>
-      </div>
-
-      <div class="controls">
-        <input id="cityInput" type="text" placeholder="ابحث عن مدينة..." />
-        <button id="searchBtn">بحث</button>
-        <button id="locBtn" title="استخدم موقعي"><i class="fa fa-map-marker"></i></button>
-      </div>
+    <!-- تأثيرات الخلفية الديناميكية -->
+    <div class="background-effects" id="backgroundEffects"></div>
+    
+    <div class="container">
+        <!-- شريط البحث -->
+        <div class="search-container">
+            <button class="location-btn" id="locationBtn" title="استخدم موقعي الحالي">
+                <i class="fas fa-location-arrow"></i>
+            </button>
+            <input type="text" class="search-input" id="searchInput" placeholder="ابحث عن مدينة...">
+            <button class="search-btn" id="searchBtn">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+        
+        <!-- محتوى الطقس -->
+        <div id="weatherContent">
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>جاري تحميل بيانات الطقس...</p>
+            </div>
+        </div>
     </div>
-
-    <main class="main-content">
-      <!-- current -->
-      <section class="current-card">
-        <div class="left">
-          <div id="mainIcon" class="icon fa fa-sun"></div>
-          <div class="temp-block">
-            <div id="temp" class="temp">--°C</div>
-            <div id="desc" class="desc">--</div>
-          </div>
-        </div>
-
-        <div class="right">
-          <div class="detail">
-            <div>💧 الرطوبة</div>
-            <div id="humidity">--%</div>
-          </div>
-          <div class="detail">
-            <div>💨 الرياح</div>
-            <div id="wind">-- م/ث</div>
-          </div>
-          <div class="detail">
-            <div>☁️ الضغط</div>
-            <div id="pressure">-- hPa</div>
-          </div>
-          <div class="detail">
-            <div>🕘 آخر تحديث</div>
-            <div id="updatedAt">--</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- hourly / weekly strip -->
-      <section class="weekly-section">
-        <h3>الطقس الأسبوعي</h3>
-        <div id="weekly" class="weekly-strip"></div>
-      </section>
-    </main>
-
-    <!-- animated layers (clouds / rain) -->
-    <div class="layer clouds" id="clouds"></div>
-    <div class="layer rain" id="rain"></div>
-
-    <footer class="footer">
-      <small>مصدر البيانات: OpenWeather • مصمم لـ: عبودي</small>
-    </footer>
-  </div>
-
-  <script src="script.js"></script>
+    
+    <!-- زر التحديث -->
+    <button class="refresh-btn" id="refreshBtn" title="تحديث البيانات">
+        <i class="fas fa-sync-alt"></i>
+    </button>
+    
+    <script src="script.js"></script>
 </body>
 </html>
