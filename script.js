@@ -1,3 +1,6 @@
+// المفتاح الخاص بك من OpenWeatherMap
+const API_KEY = "a21aa4590ddae363b4ff24483dfa6a2a";
+
 // المتغيرات العامة
 let currentWeatherData = null;
 let currentCity = "جدة";
@@ -8,139 +11,166 @@ const searchBtn = document.getElementById('searchBtn');
 const locationBtn = document.getElementById('locationBtn');
 const refreshBtn = document.getElementById('refreshBtn');
 const weatherContent = document.getElementById('weatherContent');
-const backgroundEffects = document.getElementById('backgroundEffects');
-const body = document.body;
 
-// مفتاح API الحقيقي
-const apiKey = "a21aa4590ddae363b4ff24483dfa6a2a";
-
-// تهيئة التطبيق
+// عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', function() {
     const savedCity = localStorage.getItem('lastCity');
     if (savedCity) currentCity = savedCity;
-    fetchWeatherData(currentCity);
 
+    fetchWeatherData(currentCity);
     searchBtn.addEventListener('click', handleSearch);
     locationBtn.addEventListener('click', handleLocation);
     refreshBtn.addEventListener('click', handleRefresh);
-    searchInput.addEventListener('keypress', e => {
-        if (e.key === 'Enter') handleSearch();
-    });
-    setInterval(handleRefresh, 30 * 60 * 1000);
+    searchInput.addEventListener('keypress', e => e.key === 'Enter' && handleSearch());
 });
 
-// معالجة البحث
+// عند البحث اليدوي
 function handleSearch() {
     const city = searchInput.value.trim();
-    if (city) {
-        currentCity = city;
-        fetchWeatherData(city);
-        searchInput.value = '';
-    }
+    if (!city) return showError('يرجى إدخال اسم المدينة');
+    currentCity = city;
+    fetchWeatherData(city);
+    searchInput.value = '';
 }
 
-// معالجة تحديد الموقع
+// تحديد الموقع الجغرافي
 function handleLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            pos => fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude),
-            err => showError('تعذر الحصول على موقعك. يرجى البحث يدويًا.')
-        );
-    } else {
-        showError('المتصفح لا يدعم تحديد الموقع. يرجى البحث يدويًا.');
-    }
+    if (!navigator.geolocation) return showError('المتصفح لا يدعم تحديد الموقع');
+    showLoading();
+    navigator.geolocation.getCurrentPosition(async pos => {
+        const { latitude, longitude } = pos.coords;
+        await fetchWeatherByCoords(latitude, longitude);
+    }, () => showError('تعذر الحصول على موقعك'));
 }
 
-// معالجة التحديث
+// تحديث البيانات
 function handleRefresh() {
     refreshBtn.classList.add('loading');
     fetchWeatherData(currentCity);
-    setTimeout(() => refreshBtn.classList.remove('loading'), 2000);
+    setTimeout(() => refreshBtn.classList.remove('loading'), 1500);
 }
 
-// 🔹 جلب بيانات الطقس حسب اسم المدينة من OpenWeatherMap
+// جلب الطقس بالاسم
 async function fetchWeatherData(city) {
     showLoading();
+    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=ar`;
     try {
-        const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric&lang=ar`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('فشل في جلب البيانات');
-        const data = await response.json();
-
-        const current = data.list[0];
-        const currentData = {
-            location: `${data.city.name}, ${data.city.country}`,
-            date: getCurrentDate(),
-            temperature: Math.round(current.main.temp),
-            description: current.weather[0].description,
-            icon: getWeatherIcon(current.weather[0].main),
-            feelsLike: Math.round(current.main.feels_like),
-            humidity: current.main.humidity,
-            windSpeed: current.wind.speed,
-            pressure: current.main.pressure,
-            sunrise: new Date(data.city.sunrise * 1000).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
-            sunset: new Date(data.city.sunset * 1000).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
-            uvIndex: Math.floor(Math.random() * 10),
-            cloudiness: current.clouds.all
-        };
-
-        const hourlyData = data.list.slice(0, 8).map(item => ({
-            time: new Date(item.dt * 1000).toLocaleTimeString('ar-SA', { hour: '2-digit', hour12: true }),
-            temp: Math.round(item.main.temp),
-            icon: getWeatherIcon(item.weather[0].main)
-        }));
-
-        const weeklyData = [];
-        const addedDays = new Set();
-        for (let item of data.list) {
-            const date = new Date(item.dt * 1000);
-            const dayName = date.toLocaleDateString('ar-SA', { weekday: 'long' });
-            if (!addedDays.has(dayName)) {
-                weeklyData.push({
-                    day: dayName,
-                    high: Math.round(item.main.temp_max),
-                    low: Math.round(item.main.temp_min),
-                    icon: getWeatherIcon(item.weather[0].main)
-                });
-                addedDays.add(dayName);
-            }
-            if (weeklyData.length >= 7) break;
-        }
-
-        currentWeatherData = { current: currentData, hourly: hourlyData, weekly: weeklyData };
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('فشل الاتصال');
+        const data = await res.json();
+        currentWeatherData = transformWeatherData(data);
         localStorage.setItem('lastCity', city);
         renderWeatherData();
-        updateBackground(currentData.icon);
-    } catch (error) {
-        showError('فشل في تحميل بيانات الطقس. تحقق من الاتصال بالإنترنت أو اسم المدينة.');
-        console.error(error);
+    } catch (err) {
+        showError('حدث خطأ أثناء جلب بيانات الطقس');
+        console.error(err);
     }
 }
 
-// 🔹 جلب الطقس حسب الإحداثيات
+// جلب الطقس بالإحداثيات
 async function fetchWeatherByCoords(lat, lon) {
-    showLoading();
+    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=ar`;
     try {
-        const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ar`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('فشل في جلب البيانات');
-        const data = await response.json();
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('خطأ بالاتصال');
+        const data = await res.json();
         currentCity = data.city.name;
-        fetchWeatherData(currentCity);
-    } catch (error) {
-        showError('فشل في تحديد الموقع أو تحميل الطقس.');
+        currentWeatherData = transformWeatherData(data);
+        localStorage.setItem('lastCity', currentCity);
+        renderWeatherData();
+    } catch {
+        showError('فشل جلب الطقس من موقعك');
     }
 }
 
-// 🔹 تحويل أسماء الحالات إلى رموز الأيقونات المستخدمة
-function getWeatherIcon(main) {
-    main = main.toLowerCase();
-    if (main.includes('clear')) return 'sunny';
-    if (main.includes('cloud')) return 'cloudy';
-    if (main.includes('rain')) return 'rainy';
-    if (main.includes('storm') || main.includes('thunder')) return 'stormy';
-    if (main.includes('snow')) return 'partly-cloudy';
-    return 'sunny';
+// تحويل بيانات OpenWeatherMap
+function transformWeatherData(data) {
+    const current = {
+        location: `${data.city.name}, ${data.city.country}`,
+        date: getCurrentDate(),
+        temperature: Math.round(data.list[0].main.temp),
+        description: data.list[0].weather[0].description,
+        icon: mapWeatherIcon(data.list[0].weather[0].icon),
+        feelsLike: Math.round(data.list[0].main.feels_like),
+        humidity: data.list[0].main.humidity,
+        windSpeed: data.list[0].wind.speed,
+        pressure: data.list[0].main.pressure,
+        sunrise: new Date(data.city.sunrise * 1000).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+        sunset: new Date(data.city.sunset * 1000).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+        cloudiness: data.list[0].clouds.all
+    };
+
+    const hourly = data.list.slice(0, 8).map(i => ({
+        time: new Date(i.dt * 1000).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+        temp: Math.round(i.main.temp),
+        icon: mapWeatherIcon(i.weather[0].icon)
+    }));
+
+    const dailyMap = {};
+    data.list.forEach(i => {
+        const date = new Date(i.dt * 1000).toLocaleDateString('ar-SA');
+        if (!dailyMap[date]) dailyMap[date] = [];
+        dailyMap[date].push(i.main.temp);
+    });
+
+    const weekly = Object.keys(dailyMap).slice(0, 7).map((date, idx) => ({
+        day: ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][idx % 7],
+        high: Math.round(Math.max(...dailyMap[date])),
+        low: Math.round(Math.min(...dailyMap[date])),
+        icon: 'sunny'
+    }));
+
+    return { current, hourly, weekly };
 }
 
-// باقي الدوال كما هي 👇 (renderWeatherData، loadWeatherIcons، updateBackground، إلخ)
+// تحويل رمز الأيقونة
+function mapWeatherIcon(code) {
+    const map = {
+        '01d': 'sunny', '01n': 'clear-night',
+        '02d': 'partly-cloudy', '02n': 'partly-cloudy',
+        '03d': 'cloudy', '03n': 'cloudy',
+        '04d': 'cloudy', '04n': 'cloudy',
+        '09d': 'rainy', '09n': 'rainy',
+        '10d': 'rainy', '10n': 'rainy',
+        '11d': 'rainy', '11n': 'rainy'
+    };
+    return map[code] || 'sunny';
+}
+
+// عرض البيانات على الصفحة
+function renderWeatherData() {
+    const { current, hourly, weekly } = currentWeatherData;
+    weatherContent.innerHTML = `
+        <div class="current-weather">
+            <h1>${current.location}</h1>
+            <p>${current.date}</p>
+            <h2>${current.temperature}°</h2>
+            <p>${current.description}</p>
+            <p>الرطوبة: ${current.humidity}% | الرياح: ${current.windSpeed} كم/س</p>
+        </div>
+        <hr>
+        <div class="hourly-forecast">
+            ${hourly.map(h => `<div>${h.time} - ${h.temp}°</div>`).join('')}
+        </div>
+        <hr>
+        <div class="weekly-forecast">
+            ${weekly.map(d => `<div>${d.day}: ${d.high}° / ${d.low}°</div>`).join('')}
+        </div>
+    `;
+}
+
+// إظهار حالة التحميل
+function showLoading() {
+    weatherContent.innerHTML = "<p>جاري تحميل البيانات...</p>";
+}
+
+// إظهار الخطأ
+function showError(msg) {
+    weatherContent.innerHTML = `<p style="color:red;">${msg}</p>`;
+}
+
+// التاريخ الحالي
+function getCurrentDate() {
+    const now = new Date();
+    return now.toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long' });
+}
