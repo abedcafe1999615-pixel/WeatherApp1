@@ -1,45 +1,176 @@
-/* تحسينات إضافية للدعم RTL */
-.weather-card {
-  text-align: right;
-  direction: rtl;
+:root{
+  --bg1: #0f1724;
+  --card: rgba(255,255,255,0.06);
+  --accent: #60a5fa;
+  --text: #e6eef8;
+  --muted: #9fb0c8;
 }
 
-.details {
-  text-align: right;
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: "Tajawal", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: radial-gradient(1000px 600px at 10% 20%, rgba(96,165,250,0.12), transparent 10%),
+              linear-gradient(180deg,#071226 0%, #071a2a 60%);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 
-.daily-card {
-  text-align: center;
+/* container */
+.app{
+  max-width:980px;
+  margin:18px auto;
+  padding:18px;
+  position:relative;
+  min-height:84vh;
 }
 
-/* تحسينات التجاوب */
-@media (max-width: 480px) {
-  .container {
-    padding: 10px;
-  }
-  
-  .search-box {
-    flex-direction: column;
-  }
-  
-  .search-box input {
-    width: 100%;
-    margin-bottom: 10px;
-  }
-  
-  .weekly {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
+/* top */
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:14px;
+}
+.title h1{margin:0;font-size:1.25rem}
+.title p{margin:0;color:var(--muted);font-size:0.9rem}
+
+/* controls */
+.controls{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.controls input{
+  background:var(--card);
+  border:none;
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:10px;
+  min-width:200px;
+}
+.controls button{
+  background:linear-gradient(180deg,var(--accent), #1e90ff);
+  color:white;
+  border:none;
+  padding:10px 12px;
+  border-radius:10px;
+  cursor:pointer;
+}
+.controls button#locBtn{background:transparent;color:var(--accent);font-size:1.1rem;padding:9px}
+
+/* main content grid */
+.main-content{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:14px;
 }
 
-/* تأثيرات بصرية محسنة */
-.search-box button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+/* current card */
+.current-card{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+  border-radius:16px;
+  padding:16px;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.4);
+}
+.left{display:flex;align-items:center;gap:12px}
+.icon.fa{font-size:64px; color:var(--accent); width:80px; height:80px; display:flex; align-items:center; justify-content:center}
+.temp{font-size:48px;font-weight:700}
+.desc{color:var(--muted);font-size:1rem}
+
+/* right details */
+.right{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end}
+.detail{min-width:120px;background:rgba(0,0,0,0.15);padding:8px 10px;border-radius:10px;text-align:center}
+.detail div:first-child{color:var(--muted);font-size:0.9rem}
+.detail div:last-child{font-weight:700}
+
+/* weekly */
+.weekly-section h3{margin:6px 0 6px 0;color:var(--muted)}
+.weekly-strip{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  padding:8px 6px;
+}
+.daily{
+  min-width:92px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:12px;
+  padding:8px;
+  text-align:center;
+}
+.daily .day{font-size:0.9rem;color:var(--muted)}
+.daily img{width:48px;height:48px}
+.daily .t{font-weight:700;margin-top:6px}
+
+/* layers: clouds & rain */
+.layer{position:absolute;left:0;right:0;pointer-events:none}
+.clouds{top:30px;height:140px;opacity:0.18}
+.rain{top:120px;height:300px;opacity:0.06}
+
+/* animated cloud shapes using gradients */
+.clouds::before,
+.clouds::after{
+  content:"";
+  position:absolute;
+  left:-20%;
+  width:60%;
+  height:80%;
+  background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.14), rgba(255,255,255,0.02) 40%);
+  border-radius:50%;
+  transform:translateX(0);
+  animation:cloudMove 20s linear infinite;
+}
+.clouds::after{
+  left:40%;
+  width:50%;
+  top:10%;
+  animation-duration:28s;
 }
 
-.daily-card:hover {
-  transform: translateY(-5px);
-  transition: transform 0.2s ease;
+@keyframes cloudMove{
+  0%{transform:translateX(-10vw)}
+  100%{transform:translateX(110vw)}
 }
+
+/* rain effect */
+.rain::before{
+  content:"";
+  position:absolute;
+  left:-10%;
+  top:0;
+  width:120%;
+  height:100%;
+  background-image: linear-gradient(transparent 60%, rgba(255,255,255,0.03) 60%), linear-gradient(transparent 70%, rgba(255,255,255,0.02) 70%);
+  background-size:6px 10px, 8px 12px;
+  animation:rainFall 0.5s linear infinite;
+  opacity:0.7;
+}
+@keyframes rainFall{
+  0%{background-position:0 0, 0 0}
+  100%{background-position:0 20px, 0 30px}
+}
+
+/* responsive */
+@media(min-width:800px){
+  .main-content{grid-template-columns: 1fr}
+  .current-card{padding:22px}
+}
+
+/* backgrounds per weather (class on #app) */
+.app.sunny{background: linear-gradient(180deg,#0b2b4a 0%, #0b3a60 60%); --accent:#ffbf4d}
+.app.clouds{background: linear-gradient(180deg,#2f3b47 0%, #334a58 60%); --accent:#95a5a6}
+.app.rain{background: linear-gradient(180deg,#0b3a60 0%, #062a3b 60%); --accent:#60a5fa}
+.app.snow{background: linear-gradient(180deg,#e6f2ff 0%, #d9eefc 60%); color:#0b2340; --accent:#7fbfff}
+.app.thunder{background: linear-gradient(180deg,#2b2f36 0%, #1b2a3a 60%); --accent:#f39c12}
+.app.mist{background: linear-gradient(180deg,#2f3942 0%, #4b5563 60%); --accent:#9aa8b6}
+
+/* scrollbar small */
+.weekly-strip::-webkit-scrollbar{height:8px}
+.weekly-strip::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:10px}
